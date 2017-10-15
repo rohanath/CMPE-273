@@ -5,6 +5,7 @@ import '../stylesheets/styles.css';
 import {connect} from "react-redux";
 import MainPage from "./MainPage";
 import Signup from "./Signup";
+import Files from "./Files";
 import setAuthorizationToken from '../utils/setAuthorizationToken'
 import jwt from 'jsonwebtoken';
 import About from './About';
@@ -42,20 +43,26 @@ class LoginPage extends Component {
                       this.props.loginChange(json.firstname,json.lastname);
                       const token = json.token;
                       localStorage.setItem('jwtToken',token);
-                      //this.props.storeToken(localStorage.getItem('jwtToken'));
-                      console.log("username:" + this.props.select.username);
+                      this.props.storeToken(localStorage.getItem('jwtToken'));
+                      //console.log("username:" + this.props.select.username);
 
                       this.props.history.push('/mainpage')
                     } else if (status === 401) {
                         fl = 1;
+                    } else if (status === 404) {
+                      document.getElementById("failedlogin").style.display = "block";
+                      document.getElementById("failedlogin").innerHTML = json.message;
                     }
-                  //setAuthorizationToken(token);
-                  //console.log(jwt.decode(token))
+
 
                   if(fl === 1){
                     document.getElementById("failedlogin").style.display = "block";
                     document.getElementById("failedlogin").innerHTML = json.message;
                   }
+              }).catch(error => {
+                  console.log("Here");
+                  document.getElementById("failedlogin").style.display = "block";
+                  document.getElementById("failedlogin").innerHTML = "Server issue..Please try after some time..";
               });
         }
     };
@@ -151,6 +158,9 @@ class LoginPage extends Component {
                 )}/>
                 <Route exact path="/userdatachange" render={() => (
                     <UserDataChange />
+                )}/>
+                <Route exact path="/files" render={() => (
+                    <Files />
                 )}/>
             </div>
         );

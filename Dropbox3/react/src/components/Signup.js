@@ -3,10 +3,6 @@ import { Link,Route, withRouter } from 'react-router-dom';
 import * as API from '../api/API';
 import '../stylesheets/styles.css';
 import validator from 'email-validator'
-//import Message from "./Message";
-//import Welcome from "./Welcome";
-//import loginPage from "./LoginPage";
-//import Signup from "./Signup";
 
 class Signup extends Component {
 
@@ -20,8 +16,6 @@ class Signup extends Component {
     handleSignUp = (newuser) => {
 
         var enteredemail = document.getElementById("emailsu").value
-      //  var pattern = new RegExp("/^\w+([-+.']\w+)*@\w+([-.]\w+)*\.\w+([-.]\w+)*$/");
-      //  var res = pattern.test(enteredemail);
 
         var enteredpass = document.getElementById("passsu").value;
         var pattern = new RegExp("[A-Za-z0-9]{6}");
@@ -83,7 +77,17 @@ class Signup extends Component {
                       document.getElementById("signupsuccess").style.display = "block";
                       document.getElementById("signupsuccess").innerHTML = json.message;
                     }
-                })
+                    else if(json.fl === 2) {
+                      document.getElementById("validatenm").style.display = "none";
+                      document.getElementById("validateemail").style.display = "none";
+                      document.getElementById("validatepass").style.display = "none";
+                      document.getElementById("signupsuccess").style.display = "block";
+                      document.getElementById("signupsuccess").innerHTML = json.message;
+                    }
+                }).catch(error => {
+                    document.getElementById("signupsuccess").style.display = "block";
+                    document.getElementById("signupsuccess").innerHTML = "Server issue..Please try after some time..";
+                });
         }
     };
 

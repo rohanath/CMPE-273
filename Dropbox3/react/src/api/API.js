@@ -32,7 +32,7 @@ export const doSignUp = (payload) =>
         if(res.status === 201){
             return res.json();
         }
-        else if(res.status === 401){
+        else if(res.status === 401 || res.status === 404){
             return res.json();
         }
     })
@@ -72,4 +72,36 @@ export const fetchAbout  = (payload) =>
         .catch(error => {
             console.log("This is error");
             return error;
+          });
+
+export const fetchFiles  = (payload) =>
+      fetch(`${api}/users/getFiles`, {
+          method: 'POST',
+          headers: {
+              ...headers,
+              'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(payload)
+      }).then(res => {
+          return res;
+      })
+        .catch(error => {
+            console.log("This is error");
+            return error;
+          });
+
+export const fetchstarFiles  = (payload) =>
+      fetch(`${api}/users/getstarFiles`, {
+          method: 'POST',
+          headers: {
+              ...headers,
+              'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(payload)
+      }).then(res => {
+          return res;
+      })
+        .catch(error => {
+           console.log("This is error");
+           return error;
           });

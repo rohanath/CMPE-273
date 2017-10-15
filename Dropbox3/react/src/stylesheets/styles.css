@@ -113,9 +113,14 @@
   color: gray;
 }
 
+#selectfiles{
+  margin-top:150px;
+  margin-left: 30px;
+}
+
 #uploadfiles{
-  margin-top:80px;
-  margin-left: 160px;
+  margin-top:150px;
+  margin-left: 40px;
 }
 
 #sharedfolderlink{
@@ -210,4 +215,25 @@
 #fnudch,#lnudch,#emailudch,#conudch,#w1udch,#w2udch,#e1udch,#e2udch,#m1udch,##m2udch,#sh1udch,#sh2udch,#sp1udch,#sp2udch{
   margin-top: 30px;
   margin-left: 40px;
+}
+
+#change{
+  margin-left: 150px;
+}
+
+#maindrop{
+  margin-top: 50px;
+  margin-left: 110px;
+}
+#maindroparr{
+  margin-top: 50px;
+}
+
+#errormessage{
+  margin-top: 200px;
+  display:none;
+}
+
+#tableMenu{
+  margin-top:40px;
 }

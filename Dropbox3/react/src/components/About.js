@@ -4,10 +4,6 @@ import PropTypes from 'prop-types';
 import * as API from '../api/API';
 import '../stylesheets/styles.css';
 import {connect} from "react-redux";
-//import LoginPage from './LoginPage';
-//import fileDialog from 'file-dialog';
-//import MainPage from "./MainPage";
-//import About from "./About";
 
 class About extends Component {
 
@@ -32,7 +28,7 @@ class About extends Component {
               <div className="row">
                   <div id="leftbarmain" className="col-md-3">
                         <img id= "mainpage" src="/Dropbox_Mainpage_logo.png"  alt="Dropbox logo main page" ></img>
-                        <Link id="currentpage" to="/MainPage"> <h5>Home</h5> </Link>
+                        <Link id="currentpage" to="/mainpage"> <h5>Home</h5> </Link>
                         <Link id="filespage" to="/files"> <h5>Files</h5> </Link>
                   </div>
                   <div id="centerbarmain" className="col-md-6">

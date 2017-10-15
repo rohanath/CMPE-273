@@ -1,6 +1,5 @@
 var mysql = require('mysql');
 
-//Put your mysql configuration settings - user, password, database and port
 function getConnection(){
 	var connection = mysql.createConnection({
 		host     : 'localhost',
@@ -22,6 +21,7 @@ function fetchData(callback,sqlQuery){
 	connection.query(sqlQuery, function(err, rows, fields) {
 		if(err){
 			console.log("ERROR: " + err.message);
+			return;
 		}
 		else
 		{	// return err or result
@@ -42,6 +42,7 @@ function insertData(callback,sql){
 	connection.query(sql, function(err, result) {
 		if(err){
 			console.log("ERROR: " + err.message);
+			return;
 		}
 		else
 		{	// return err or result

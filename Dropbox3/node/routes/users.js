@@ -2,43 +2,52 @@ const mySQL = require('./mysql');
 var express = require('express');
 var router = express.Router();
 var jwt = require('jsonwebtoken')
-//import jwt from 'jsonwebtoken';
-//var config = require('./config')
-//import config from '../config';
+var fs = require('fs');
+var multer = require('multer');
+var fs = require('fs');
+var path = require('path');
+var upload = multer({ dest: '../react/public/uploads/' });
 
-/* GET users listing. */
+var token;
+var username;
+const uploadsFolder = '../../uploads';
+
 router.get('/', function (req, res, next) {
     res.send('respond with a resource');
 });
 
 router.post('/getUserData', function (req, res, next) {
 
-    var reqUsername = req.body.username;
+    if(req.body.token === token){
+        console.log(req.body.token);
+        var reqUsername = req.body.username;
 
-    const fetchDataSQL = "SELECT * FROM userdetails where email = '" + reqUsername + "'";
+        const fetchDataSQL = "SELECT * FROM userdetails where email = '" + reqUsername + "'";
 
-    mySQL.fetchData(function(err,results){
-       if(err){
-          throw err;
-       }
-       else
-       {
-          //console.log(results.length);
-          if(results.length > 0  ){
-            //console.log(results[0].firstname)
-             res.status(201).json({results:results});
-          }
-          else {
-             res.status(401).json({message: "You have not updated your details"});
-          }
-       }
-    }, fetchDataSQL);
+        mySQL.fetchData(function(err,results){
+           if(err){
+              res.status(404).json({message:'Some error occurred!'})
+           }
+           else
+           {
+                if(results.length > 0  ){
+                 res.status(201).json({results:results});
+              }
+              else {
+                 res.status(401).json({message: "You have not updated your details"});
+              }
+           }
+        }, fetchDataSQL);
+      }
+      else{
+            res.status(404);
+      }
 
 });
 
 
 router.post('/doLogin', function (req, res, next) {
-
+    upload = multer({ dest: `../react/public/uploads/${req.body.username}/` })
     var reqUsername = req.body.username;
     var reqPassword = req.body.password;
     var jwtSecret = 'somesecretkey';
@@ -46,14 +55,12 @@ router.post('/doLogin', function (req, res, next) {
     const fetchDataSQL = "SELECT * FROM Users where email = '" + reqUsername + "' and password = '" + reqPassword+"'";
     mySQL.fetchData(function(err,results){
        if(err){
-          throw err;
+          res.status(404).json({message:'Some error occurred!'})
        }
        else
        {
-          //console.log(results.length);
           if(results.length > 0  ){
-            //console.log(results[0].firstname)
-            const token = jwt.sign({
+             token = jwt.sign({
               username: reqUsername
             }, jwtSecret)
              res.status(201).json({message: "Login Successful!!!",token:token,firstname: results[0].firstname,lastname: results[0].lastname});
@@ -74,7 +81,7 @@ router.post('/doSignUp', function (req, res, next) {
     var reqLastName = req.body.lastName;
     var reqEmail = req.body.email;
     var reqPassword = req.body.password;
-  //  var insertData,selectData;
+
 
     const insertDataSQL = "INSERT INTO users VALUES ('" + reqFirstName + "','" + reqLastName + "','" + reqEmail + "','" + reqPassword + "')";
     const fetchDataSQL = "SELECT * FROM Users where email = '" + reqEmail + "'";
@@ -85,20 +92,20 @@ router.post('/doSignUp', function (req, res, next) {
        }
        else
        {
-          //console.log(results.length);
           if(results.length > 0  ){
-        //     selectData = {message: "Email already exists!!!"};
              res.status(401).json({fl: 0,message: "Email already exists!!!"})
           }
           else {
             mySQL.insertData((err, results) => {
                if(err){
-         			throw err;
+             			res.status(404).json({fl: 2,message:'Some error occurred!'})
          		}
          		else
          		{
          			    console.log("No. of results after insertion:" + results.affectedRows);
-          //        insertData = {message: "Yay!!! Your account has been created...! Please Login"};
+                  makeDir('../react/public/uploads/'+reqEmail)
+                  makeDir('../react/public/uploads/'+reqEmail+'/Files/')
+                  makeDir('../react/public/uploads/'+reqEmail+'/StarredFiles/')
                   res.status(201).json({fl: 1,message: "Yay!!! Your account has been created...! Please Login"})
                   console.log("Inserted");
                }
@@ -107,13 +114,13 @@ router.post('/doSignUp', function (req, res, next) {
        }
 
     }, fetchDataSQL);
-
   })
 
   router.post('/changeUserData', function (req, res, next) {
 
+    if(req.body.token === token){
+
       var reqUsername = req.body.username;
-      var reqContact = req.body.contact;
 
       if(!req.body.w1 == ''){
         var reqw1 = req.body.w1;
@@ -174,7 +181,6 @@ router.post('/doSignUp', function (req, res, next) {
       }else {
         var reqsp2 = '';
       }
-    //  var insertData,selectData;
 
       const fetchDataSQL = "SELECT * FROM userdetails where email = '" + reqUsername + "'";
       const insertDataSQL1 = "INSERT INTO userdetails VALUES ('" + reqw1 + "','" + reqe1 + "','" + reqm1 + "','" + reqsh1 + "','" + reqsp1 + "','" + reqUsername + "')";
@@ -210,7 +216,7 @@ router.post('/doSignUp', function (req, res, next) {
                                   //console.log(results.length);
                                   if(results.length > 0  ){
                                     //console.log(results[0].firstname)
-                                     res.status(201).json({results:results});
+                                     res.status(201).json({message:"Details saved!!",results:results});
                                      console.log("Everything is fine")
                                   }
                                   else {
@@ -235,7 +241,99 @@ router.post('/doSignUp', function (req, res, next) {
 
         }, fetchDataSQL);
 
+    }
+    else{
+                res.status(404);
+    }
+
   })
+
+
+  router.post('/files', upload.any(), function (req, res, next) {
+
+    var username = req.query.username;
+    console.log(username)
+
+     console.log("here")
+     if (!req.files) {
+        return next(new Error('No files uploaded'))
+     }
+
+     req.files.forEach((file) => {
+       console.log(path.join(__dirname,'../'))
+        console.log(file.originalname)
+        fs.rename(path.join(__dirname,'../../react/public') + `/uploads/` + file.filename, path.join(__dirname,'../../react/public') + `/uploads/${username}/Files/` + file.originalname, function(err) {
+             if ( err ){
+               console.log('ERROR: ' + err.message);
+             }
+          });
+     })
+     console.log('done..');
+     res.status(200).end()
+  })
+
+  router.post('/getFiles', function (req, res, next) {
+
+      var filelist=[];
+      var username = req.body.username;
+
+     if(req.body.token === token){
+
+          fs.readdirSync(path.join(__dirname, `../../react/public/uploads/${username}/Files`)).forEach(file => {
+                filelist.push(file);
+          })
+          console.log(filelist)
+          res.status(201).json({files:filelist})
+      }
+       else{
+             res.status(404);
+       }
+
+  })
+
+  router.post('/getstarFiles', function (req, res, next) {
+
+      var filelist=[];
+      var username = req.body.username;
+
+     if(req.body.token === token){
+
+          fs.readdirSync(path.join(__dirname, `../../react/public/uploads/${username}/StarredFiles`)).forEach(file => {
+                filelist.push(file);
+          })
+          console.log(filelist)
+          res.status(201).json({files:filelist})
+      }
+       else{
+             res.status(404);
+       }
+
+  })
+
+  router.get('/deletefile',function(req, res){
+      fs.unlinkSync(path.join(__dirname,'../../')+`/react/public/uploads/${req.query.username}/Files/`+`/${req.query.filename}`);
+      res.status(200).json();
+});
+
+  router.get('/deletestarfile',function(req, res){
+      fs.unlinkSync(path.join(__dirname,'../../')+`/react/public/uploads/${req.query.username}/StarredFiles/`+`/${req.query.filename}`);
+      res.status(200).json();
+  });
+
+  router.get('/starfile',function(req, res){
+      fs.writeFileSync(path.join(__dirname,'../../')+`/react/public/uploads/${req.query.username}/StarredFiles/${req.query.filename}`, fs.readFileSync(path.join(__dirname,'../../')+`/react/public/uploads/${req.query.username}/Files/`+`/${req.query.filename}`));
+      res.status(200).json();
+});
+
+  const makeDir = function (dirPath) {
+  try {
+    fs.mkdirSync(dirPath)
+  } catch (err) {
+    if (err.code !== 'EEXIST') {
+      console.log(err.message);
+    }
+  }
+}
 
 
 module.exports = router;

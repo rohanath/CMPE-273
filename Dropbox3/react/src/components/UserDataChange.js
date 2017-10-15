@@ -5,12 +5,9 @@ import * as API from '../api/API';
 import '../stylesheets/styles.css';
 import {connect} from "react-redux";
 import validator from 'email-validator';
-//import LoginPage from './LoginPage';
-//import fileDialog from 'file-dialog';
-//import MainPage from "./MainPage";
-//import About from "./About";
 
 class UserDataChange extends Component {
+
 
     componentWillMount(){
 
@@ -32,27 +29,34 @@ class UserDataChange extends Component {
                 }).then((changeddata) => {
 
                       if (status === 201) {
-                        document.getElementById("changesuccess").style.display = "none";
+                        document.getElementById("changesuccess").style.display = "block";
+                        document.getElementById("changesuccess").innerHTML = changeddata.message;
                         this.props.userDataChange(changeddata.results)
                         //console.log(changeddata.results[0].Work);
-                        this.props.history.push('/about')
+                        //this.props.history.push('/about')
                       } else if (status === 401) {
                           document.getElementById("changesuccess").style.display = "block";
+                          document.getElementById("changesuccess").innerHTML = changeddata.message;
+                      }else if (status === 404) {
+                        this.props.storeRestore();
+                        window.location.change('/');
                       }
-                });
-
-        };
+            }).catch(error => {
+                document.getElementById("changesuccess").style.display = "block";
+                document.getElementById("changesuccess").innerHTML = "Server issue..Please try after some time..";
+            });
+      };
 
     render(){
 
-        var firstname,lastname,email,userdetails={username:this.props.select.username};
+        var firstname,lastname,email,userdetails={username:this.props.select.username,token:this.props.select.token};
 
         return(
           <div className="container-fluid">
               <div className="row">
                   <div id="leftbarmain" className="col-md-3">
                         <img id= "mainpage" src="/Dropbox_Mainpage_logo.png"  alt="Dropbox logo main page" ></img>
-                        <Link id="currentpage" to="/MainPage"> <h5>Home</h5> </Link>
+                        <Link id="currentpage" to="/mainpage"> <h5>Home</h5> </Link>
                         <Link id="filespage" to="/files"> <h5>Files</h5> </Link>
                   </div>
                   <div id="centerbarmain" className="col-md-6">
@@ -105,25 +109,6 @@ class UserDataChange extends Component {
                               />
                           </div>
 
-                          <div>
-                              <p id="validatecontact"></p>
-                          </div>
-
-                          <div className="form-group">
-                              <input id="conudch"
-                                  className="form-control"
-                                  type="email"
-                                  label="Username"
-                                  placeholder="Contact Detail"
-                                  //value={this.props.select.con}
-                                  onChange={(event) => {
-                                      console.log(userdetails)
-                                      userdetails.contact = event.target.value;
-
-                                      //this.props.conChange(event.target.value)
-                                  }}
-                              />
-                          </div>
 
                           <div>
                               <p id="validatew1"></p>
@@ -309,7 +294,7 @@ class UserDataChange extends Component {
                           </div>
 
                           <div id="change" className="form-group">
-                              <button
+                              <button id="change"
                                   className="btn btn-primary"
                                   type="button"
                                   onClick={() => this.changeUserData(userdetails)}>
@@ -340,76 +325,12 @@ const mapDispatchToProps = (dispatch) => {
       });
     },
 
-/*    w1Change: (w1) => {
+    storeRestore: () => {
           dispatch({
-        type: "CHANGEW1",
-        payload :{w1:w1}
+        type: "RESTORE"
       });
     },
 
-    w2Change: (w2) => {
-          dispatch({
-        type: "CHANGEW2",
-        payload :{w2:w2}
-      });
-    },
-
-    e1Change: (e1) => {
-          dispatch({
-        type: "CHANGEE1",
-        payload :{e1:e1}
-      });
-    },
-
-    e2Change: (e2) => {
-          dispatch({
-        type: "CHANGEE2",
-        payload :{e2:e2}
-      });
-    },
-
-    m1Change: (m1) => {
-          dispatch({
-        type: "CHANGEM1",
-        payload :{m1:m1}
-      });
-    },
-
-    m2Change: (m2) => {
-          dispatch({
-        type: "CHANGEM2",
-        payload :{m2:m2}
-      });
-    },
-
-    sh1Change: (sh1) => {
-          dispatch({
-        type: "CHANGESH1",
-        payload :{sh1:sh1}
-      });
-    },
-
-    sh2Change: (sh2) => {
-          dispatch({
-        type: "CHANGESH2",
-        payload :{sh2:sh2}
-      });
-    },
-
-    sp1Change: (sp1) => {
-          dispatch({
-        type: "CHANGESP1",
-        payload :{sp1:sp1}
-      });
-    },
-
-    sp2Change: (sp2) => {
-          dispatch({
-        type: "CHANGESP2",
-        payload :{sp2:sp2}
-      });
-    },
-*/
   };
 };
 
