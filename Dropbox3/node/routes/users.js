@@ -1,4 +1,4 @@
-const mySQL = require('./mysql');
+const mySQL = require('./MySqlConnectionPooling');
 var express = require('express');
 var router = express.Router();
 var jwt = require('jsonwebtoken')
@@ -7,16 +7,29 @@ var multer = require('multer');
 var fs = require('fs');
 var path = require('path');
 var upload = multer({ dest: '../react/public/uploads/' });
+var bcrypt = require('bcrypt');
+var dateTime = require('node-datetime');
+var dt = dateTime.create();
 
+
+var salt = 3;
 var token;
 var username;
+var logger='';
 const uploadsFolder = '../../uploads';
+
+var bunyan = require('bunyan');
+var log = bunyan.createLogger({name: "Dropbox_activity_report"});
+
 
 router.get('/', function (req, res, next) {
     res.send('respond with a resource');
 });
 
 router.post('/getUserData', function (req, res, next) {
+
+
+    logger.write(`\r\n User is currently on the About page`)
 
     if(req.body.token === token){
         console.log(req.body.token);
@@ -47,23 +60,42 @@ router.post('/getUserData', function (req, res, next) {
 
 
 router.post('/doLogin', function (req, res, next) {
+
+/*      logger = fs.createWriteStream('../../log.txt', {
+        flags: 'a' // 'a' means appending (old data will be preserved)
+      })*/
+
+
     upload = multer({ dest: `../react/public/uploads/${req.body.username}/` })
     var reqUsername = req.body.username;
     var reqPassword = req.body.password;
     var jwtSecret = 'somesecretkey';
 
-    const fetchDataSQL = "SELECT * FROM Users where email = '" + reqUsername + "' and password = '" + reqPassword+"'";
+    const fetchDataSQL = "SELECT * FROM Users where email = '" + reqUsername + "' ";
     mySQL.fetchData(function(err,results){
        if(err){
           res.status(404).json({message:'Some error occurred!'})
        }
        else
        {
-          if(results.length > 0  ){
+          if(results.length > 0  && bcrypt.compareSync(reqPassword,results[0].password)){
              token = jwt.sign({
               username: reqUsername
             }, jwtSecret)
+
+            logger = fs.createWriteStream(path.join(__dirname,'../../') +`/react/public/uploads/${req.body.username}/`+ `User_Activity.txt`, {
+             flags: 'a'
+            })
+
+             logger.write(`\r\n${req.body.username} logged in on `+new Date(dt.now()));
              res.status(201).json({message: "Login Successful!!!",token:token,firstname: results[0].firstname,lastname: results[0].lastname});
+             try{
+
+             console.log("logged");}
+             catch(err)
+             {
+               console.log(err.message);
+             }
              console.log("Login Successful")
           }
           else {
@@ -77,13 +109,13 @@ router.post('/doLogin', function (req, res, next) {
 
 router.post('/doSignUp', function (req, res, next) {
 
+
     var reqFirstName = req.body.firstName;
     var reqLastName = req.body.lastName;
     var reqEmail = req.body.email;
     var reqPassword = req.body.password;
 
 
-    const insertDataSQL = "INSERT INTO users VALUES ('" + reqFirstName + "','" + reqLastName + "','" + reqEmail + "','" + reqPassword + "')";
     const fetchDataSQL = "SELECT * FROM Users where email = '" + reqEmail + "'";
 
     mySQL.fetchData(function(err,results){
@@ -96,20 +128,35 @@ router.post('/doSignUp', function (req, res, next) {
              res.status(401).json({fl: 0,message: "Email already exists!!!"})
           }
           else {
-            mySQL.insertData((err, results) => {
-               if(err){
-             			res.status(404).json({fl: 2,message:'Some error occurred!'})
-         		}
-         		else
-         		{
-         			    console.log("No. of results after insertion:" + results.affectedRows);
-                  makeDir('../react/public/uploads/'+reqEmail)
-                  makeDir('../react/public/uploads/'+reqEmail+'/Files/')
-                  makeDir('../react/public/uploads/'+reqEmail+'/StarredFiles/')
-                  res.status(201).json({fl: 1,message: "Yay!!! Your account has been created...! Please Login"})
-                  console.log("Inserted");
-               }
-            },insertDataSQL)
+
+            bcrypt.hash(reqPassword,salt,function(err,hash){
+
+
+                const insertDataSQL = "INSERT INTO users VALUES ('" + reqFirstName + "','" + reqLastName + "','" + reqEmail + "','" + hash + "')";
+                mySQL.insertData((err, results) => {
+                   if(err){
+                 			res.status(404).json({fl: 2,message:'Some error occurred!'})
+             		}
+             		else
+             		{
+             			    console.log("No. of results after insertion:" + results.affectedRows);
+                      makeDir('../react/public/uploads/'+reqEmail)
+                      makeDir('../react/public/uploads/'+reqEmail+'/Files/')
+                      makeDir('../react/public/uploads/'+reqEmail+'/StarredFiles/')
+
+                        logger = fs.createWriteStream(path.join(__dirname,'../../') +`/react/public/uploads/${req.body.email}/`+ `User_Activity.txt`, {
+                         flags: 'a'
+                       })
+
+                       logger.write(`\r\n${req.body.email} signed up on `+new Date(dt.now()));
+
+                      res.status(201).json({fl: 1,message: "Yay!!! Your account has been created...! Please Login"})
+                      console.log("Inserted");
+                   }
+                },insertDataSQL)
+
+            })
+
           }
        }
 
@@ -117,6 +164,8 @@ router.post('/doSignUp', function (req, res, next) {
   })
 
   router.post('/changeUserData', function (req, res, next) {
+
+    logger.write(`\r\n User is currently on the change data page`)
 
     if(req.body.token === token){
 
@@ -196,6 +245,7 @@ router.post('/doSignUp', function (req, res, next) {
               if(results.length === 0  ){
                 mySQL.insertData((err, results) => {
                    if(err){
+                     logger.write(`\r\n Error has occued while changing data`)
                      res.status(401).json({message: "Some error occured"});
                     }
                       else
@@ -203,12 +253,14 @@ router.post('/doSignUp', function (req, res, next) {
                           //console.log(results);
                           mySQL.insertData((err, results) => {
                              if(err){
+                            logger.write(`\r\n Error has occued while changing data`)
                        			res.status(401).json({message: "Some error occured"});
                        		}
                        		else
                        		{
                             mySQL.fetchData(function(err,results){
                                if(err){
+                                  logger.write(`\r\n Error has occued while changing data`)
                                   res.status(401).json({message: "Some error occured"});
                                }
                                else
@@ -217,8 +269,8 @@ router.post('/doSignUp', function (req, res, next) {
                                   if(results.length > 0  ){
                                     //console.log(results[0].firstname)
                                      res.status(201).json({message:"Details saved!!",results:results});
-                                     console.log("Everything is fine")
-                                  }
+                                     logger.write(`\r\n User has successfully updated information at` +new Date(dt.now()))
+                                   }
                                   else {
                                      res.status(401).json({message: "Some error occured"});
                                      //console.log("No data");
@@ -251,6 +303,9 @@ router.post('/doSignUp', function (req, res, next) {
 
   router.post('/files', upload.any(), function (req, res, next) {
 
+    //logger.write('User is on Main page trying to upload a file')
+    logger.write(`\r\n User is currently on the Main page trying to upload a file`)
+
     var username = req.query.username;
     console.log(username)
 
@@ -265,6 +320,8 @@ router.post('/doSignUp', function (req, res, next) {
         fs.rename(path.join(__dirname,'../../react/public') + `/uploads/` + file.filename, path.join(__dirname,'../../react/public') + `/uploads/${username}/Files/` + file.originalname, function(err) {
              if ( err ){
                console.log('ERROR: ' + err.message);
+             }else{
+               logger.write(`\r\n User uploaded file ` + file.originalname + `on` +new Date(dt.now()))
              }
           });
      })
@@ -273,6 +330,8 @@ router.post('/doSignUp', function (req, res, next) {
   })
 
   router.post('/getFiles', function (req, res, next) {
+
+      logger.write(`\r\n User is currently on the Files page at` +new Date(dt.now()))
 
       var filelist=[];
       var username = req.body.username;
@@ -293,6 +352,8 @@ router.post('/doSignUp', function (req, res, next) {
 
   router.post('/getstarFiles', function (req, res, next) {
 
+      logger.write(`\r\n User is currently on the Main page at` +new Date(dt.now()))
+
       var filelist=[];
       var username = req.body.username;
 
@@ -311,19 +372,47 @@ router.post('/doSignUp', function (req, res, next) {
   })
 
   router.get('/deletefile',function(req, res){
+
+      logger.write(`\r\n User is deleting the file ${req.query.filename} at` +new Date(dt.now()))
+
       fs.unlinkSync(path.join(__dirname,'../../')+`/react/public/uploads/${req.query.username}/Files/`+`/${req.query.filename}`);
+      logger.write(`\r\n User deleted the file ${req.query.filename} at`+new Date(dt.now()))
       res.status(200).json();
 });
 
   router.get('/deletestarfile',function(req, res){
+
+      logger.write(`\r\n User is unstarring the starred file ${req.query.filename} at` +new Date(dt.now()))
+
       fs.unlinkSync(path.join(__dirname,'../../')+`/react/public/uploads/${req.query.username}/StarredFiles/`+`/${req.query.filename}`);
+      logger.write(`\r\n User unstarred the starred file ${req.query.filename} at` +new Date(dt.now()))
       res.status(200).json();
   });
 
   router.get('/starfile',function(req, res){
+
+      logger.write(`\r\n User is on the files page to star a file at` +new Date(dt.now()))
+
       fs.writeFileSync(path.join(__dirname,'../../')+`/react/public/uploads/${req.query.username}/StarredFiles/${req.query.filename}`, fs.readFileSync(path.join(__dirname,'../../')+`/react/public/uploads/${req.query.username}/Files/`+`/${req.query.filename}`));
+      logger.write(`\r\n User starred ${req.query.filename} at` +new Date(dt.now()))
       res.status(200).json();
 });
+
+  router.post('/signout', function (req, res, next) {
+
+
+      logger.write(`\r\n User has signed out at ` +new Date(dt.now()))
+
+      if(req.body.token === token){
+            res.status(201).status({message:"Signed out successfully"})
+        }
+        else{
+              res.status(404);
+        }
+
+  });
+
+
 
   const makeDir = function (dirPath) {
   try {

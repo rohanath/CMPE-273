@@ -11,3 +11,5 @@ Front-end server
 	1. cd react
 	2. npm install
 	3. npm start
+
+	Make sure there is an 'uploads' folder inside react-->public.

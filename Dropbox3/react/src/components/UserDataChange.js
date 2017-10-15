@@ -26,6 +26,7 @@ class UserDataChange extends Component {
                 .then((res) => {
                   status = res.status;
                   return res.json()
+
                 }).then((changeddata) => {
 
                       if (status === 201) {

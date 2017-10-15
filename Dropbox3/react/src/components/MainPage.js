@@ -78,7 +78,16 @@ class MainPage extends Component {
   }
 
 
-  handleSignOut = () => {
+  handleSignOut = (userdata) => {
+
+        API.signout(userdata)
+            .then((res) => {
+                console.log("Signed out");
+            }).catch(error => {
+                  console.log("Error" +error);
+            });
+
+
            localStorage.removeItem('jwtToken');
            this.props.storeRestore();
            window.location.replace('/');
@@ -92,6 +101,7 @@ class MainPage extends Component {
             .then((res) => {
               status = res.status;
               return res.json()
+
             }).then((receiveddata) => {
 
                   if (status === 201) {
@@ -196,7 +206,7 @@ class MainPage extends Component {
                             <div className="dropdown-divider"></div>
                             <a className="dropdown-item" onClick={() => this.handleAbout(userdata)}>About</a>
                             <div className="dropdown-divider"></div>
-                            <a className="dropdown-item" onClick={() => this.handleSignOut()}>Sign Out</a>
+                            <a className="dropdown-item" onClick={() => this.handleSignOut(userdata)}>Sign Out</a>
                           </div>
                         </div>
 

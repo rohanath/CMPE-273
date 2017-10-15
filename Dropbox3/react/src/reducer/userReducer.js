@@ -114,13 +114,6 @@ const userReducer = (state = {
 
         break;
 
-    case "REMOVESTAR":
-
-        state={
-          ...state,
-          starredfiles: []
-        };
-
     break;
 
     case "REMOVE":

@@ -67,7 +67,6 @@ class Files extends Component {
                 }).then((json) => {
 
                       if (status === 201) {
-                          console.log("here");
                           this.props.storeFiles(json.files)
                           window.location.replace('http://localhost:3000/files');
                       } else if (status === 401) {
