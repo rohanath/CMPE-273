@@ -1,6 +1,6 @@
 
 
-Open two terminals and follow the steps on the terminals to start the servers:
+Open two terminals and follow these steps on the terminals to start the servers:
 
 Back-end server
 	1. cd node

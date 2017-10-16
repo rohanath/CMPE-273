@@ -234,6 +234,13 @@ class MainPage extends Component {
                         Upload Files</button>
 
 
+                        <button id="sharedfolderlink"
+                                className="btn btn-primary"
+                                type="button"
+                                onClick={() => this.handleShared()}>
+                        New Shared Folder</button>
+
+
                   </div>
               </div>
 
